@@ -19,11 +19,22 @@ if prompt := st.chat_input("Kuch bhi pucho..."):
     st.chat_message("user").write(prompt)
 
     with st.spinner("Soch raha hu..."):
-        response = client.models.generate_content(
-            model="gemini-1.5-flash",
-            contents=prompt
-        )
-        ans = response.text
+        try:
+            # Pehle naya model try karega, fail hua to purana
+            models_to_try = ["gemini-2.5-flash-lite", "gemini-2.0-flash", "gemini-1.5-flash"]
+            ans = None
+            for m in models_to_try:
+                try:
+                    response = client.models.generate_content(model=m, contents=prompt)
+                    ans = response.text
+                    break
+                except:
+                    continue
+            
+            if not ans:
+                ans = "Google ka server busy hai, 1 min baad fir try karo."
+        except Exception as e:
+            ans = f"Error: {e}"
 
     st.chat_message("assistant").write(ans)
     st.session_state.messages.append({"role": "assistant", "content": ans})
